@@ -89,7 +89,6 @@
 #     ort_session = rt.InferenceSession(onnx_model_path)
 #     main()
 
-
 import streamlit as st
 import cv2
 import tempfile
@@ -135,14 +134,29 @@ st.title("Video Transformer")
 uploaded_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv"])
 
 if uploaded_file is not None:
-    # Create a temporary file to save the uploaded video
-    tfile = tempfile.NamedTemporaryFile(delete=False)
-    tfile.write(uploaded_file.read())
+    with st.spinner('Processing video...'):
+        # Create a temporary directory to save the uploaded video
+        with tempfile.NamedTemporaryFile(delete=False) as temp_video_file:
+            temp_video_file.write(uploaded_file.read())
+            temp_video_file_path = temp_video_file.name
 
-    # Define the output video file path
-    output_video_path = os.path.join(tempfile.gettempdir(), 'transformed_video.mp4')
+        # Define the output video file path
+        output_video_path = os.path.join(tempfile.gettempdir(), 'transformed_video.mp4')
 
-    # Process the video with the ML model (or any other transformation)
-    process_video(tfile.name, output_video_path)
+        # Process the video with the transformation
+        process_video(temp_video_file_path, output_video_path)
 
-    st.video(output_video_path)
+        # Display the transformed video
+        st.video(output_video_path)
+
+        # Provide a download button
+        with open(output_video_path, "rb") as file:
+            st.download_button(
+                label="Download Transformed Video",
+                data=file,
+                file_name="transformed_video.mp4",
+                mime="video/mp4"
+            )
+
+st.write("Upload a video file to see the transformed result.")
+
