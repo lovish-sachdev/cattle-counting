@@ -113,3 +113,5 @@ if f is not None:
                 break
             gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             stframe.image(gray)
+            key = cv2.waitKey(1)
+        
