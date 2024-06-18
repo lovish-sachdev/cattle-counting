@@ -77,8 +77,8 @@ def main():
             predictions = postprocess(outputs[0])
             frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
             frame=draw_boxes(frame, predictions)
-            frame=cv2.resize(frame,(640,640))
-            stframe.image(frame, channels="RGB")
+            frame=cv2.resize(frame,(320,320))
+            # stframe.image(frame, channels="RGB")
 
         cap.release()
         os.remove(tfile.name)
