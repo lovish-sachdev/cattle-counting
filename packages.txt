@@ -1,4 +1,2 @@
 libgl1
 libxrender1
-libgtk2.0-dev
-pkg-config
