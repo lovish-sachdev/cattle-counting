@@ -90,28 +90,59 @@
 #     main()
 
 
-
 import streamlit as st
-import cv2 as cv
+import cv2
 import tempfile
+import os
 
-f = st.file_uploader("Upload file")
-if f is not None:
-        tfile = tempfile.NamedTemporaryFile(delete=False) 
-        tfile.write(f.read())
-
-
-        vf = cv.VideoCapture(tfile.name)
-
-        stframe = st.empty()
-
-        while vf.isOpened():
-            ret, frame = vf.read()
-            # if frame is read correctly ret is True
-            if not ret:
-                print("Can't receive frame (stream end?). Exiting ...")
-                break
-            gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            # stframe.image(gray)
-
+def process_video(input_video_path, output_video_path):
+    cap = cv2.VideoCapture(input_video_path)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = None
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_count = 0
+    
+    # Create a progress bar
+    progress_bar = st.progress(0)
+    
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
         
+        # Example transformation: flipping the frame horizontally
+        transformed_frame = cv2.flip(frame, 1)
+        
+        # If you are running an ML model, it would go here
+        # transformed_frame = your_ml_model(frame)
+        
+        if out is None:
+            # Initialize the video writer
+            out = cv2.VideoWriter(output_video_path, fourcc, cap.get(cv2.CAP_PROP_FPS), (frame.shape[1], frame.shape[0]))
+
+        out.write(transformed_frame)
+        frame_count += 1
+        
+        # Update the progress bar
+        progress_bar.progress(frame_count / total_frames)
+
+    cap.release()
+    out.release()
+    progress_bar.empty()  # Clear the progress bar
+
+st.title("Video Transformer")
+
+uploaded_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv"])
+
+if uploaded_file is not None:
+    # Create a temporary file to save the uploaded video
+    tfile = tempfile.NamedTemporaryFile(delete=False)
+    tfile.write(uploaded_file.read())
+
+    # Define the output video file path
+    output_video_path = os.path.join(tempfile.gettempdir(), 'transformed_video.mp4')
+
+    # Process the video with the ML model (or any other transformation)
+    process_video(tfile.name, output_video_path)
+
+    st.video(output_video_path)
