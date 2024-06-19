@@ -120,7 +120,7 @@ def process_video(input_video_path, output_video_path):
         
         # Update the progress bar
         progress_bar.progress(frame_count / total_frames)
-        if frame%10==0:
+        if frame_count%10==0:
             st_frame.image(transformed_frame,
                    caption='Detected Video',
                    channels="BGR",
