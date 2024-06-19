@@ -118,5 +118,5 @@ if uploaded_video is not None: # run only when user uploads video
             print('frame: {}'.format(cur_frame)) 
             pil_img = Image.fromarray(frame) # convert opencv frame (with type()==numpy) into PIL Image
             st_image.image(pil_img)
-            cv2.waitKey(300) 
+        cv2.waitKey(300) 
         cur_frame += 1
