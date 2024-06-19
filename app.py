@@ -76,10 +76,7 @@ def main():
             if not ret:
                 break
             texty.write(count)
-            count+=1
-            if count==500:
-                break
-            
+            count+=1    
             input_tensor = preprocess(frame,count)
             outputs = ort_session.run(None, {ort_session.get_inputs()[0].name: input_tensor})
             predictions = postprocess(outputs[0])
