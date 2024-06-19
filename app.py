@@ -93,6 +93,7 @@ import streamlit as st
 import cv2
 from PIL import Image
 
+
 uploaded_video = st.file_uploader("Choose video", type=["mp4", "mov"])
 frame_skip = 30 # display every 300 frames
 
@@ -117,4 +118,5 @@ if uploaded_video is not None: # run only when user uploads video
             print('frame: {}'.format(cur_frame)) 
             pil_img = Image.fromarray(frame) # convert opencv frame (with type()==numpy) into PIL Image
             st_image.image(pil_img)
+            cv2.waitKey(300) 
         cur_frame += 1
