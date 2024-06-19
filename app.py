@@ -89,61 +89,66 @@
 #     ort_session = rt.InferenceSession(onnx_model_path)
 #     main()
 
+
 import streamlit as st
 import cv2
-import tempfile
-import os
+import subprocess
 
-def process_video(input_video_path, output_video_path):
-    cap = cv2.VideoCapture(input_video_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = None
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frame_count = 0
-    st.write(total_frames)
-    # Create a progress bar
-    st_frame=st.empty()
-    progress_bar = st.progress(0)
+video_data = st.file_uploader("Upload file", ['mp4','mov', 'avi'])
+
+temp_file_to_save = './temp_file_1.mp4'
+temp_file_result  = './temp_file_2.mp4'
+
+# func to save BytesIO on a drive
+def write_bytesio_to_file(filename, bytesio):
+    """
+    Write the contents of the given BytesIO to a file.
+    Creates the file or overwrites the file if it does
+    not exist yet. 
+    """
+    with open(filename, "wb") as outfile:
+        # Copy the BytesIO stream to the output file
+        outfile.write(bytesio.getbuffer())
+
+if video_data:
+    # save uploaded video to disc
+    write_bytesio_to_file(temp_file_to_save, video_data)
+
+    # read it with cv2.VideoCapture(), 
+    # so now we can process it with OpenCV functions
+    cap = cv2.VideoCapture(temp_file_to_save)
+
+    # grab some parameters of video to use them for writing a new, processed video
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    frame_fps = cap.get(cv2.CAP_PROP_FPS)  ##<< No need for an int
+    st.write(width, height, frame_fps)
     
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        # Example transformation: flipping the frame horizontally
-        transformed_frame = cv2.flip(frame, 0)
-        
-        # If you are running an ML model, it would go here
-        # transformed_frame = your_ml_model(frame)
-
-        frame_count += 1
-        
-        # Update the progress bar
-        progress_bar.progress(frame_count / total_frames)
-        if frame_count%100==0:
-            st.image(transformed_frame,
-                   caption='Detected Video',
-                   channels="BGR",
-                   use_column_width=True
-                   )
+    # specify a writer to write a processed video to a disk frame by frame
+    fourcc_mp4 = cv2.VideoWriter_fourcc(*'mp4v')
+    out_mp4 = cv2.VideoWriter(temp_file_result, fourcc_mp4, frame_fps, (width, height),isColor = False)
+   
+    while True:
+        ret,frame = cap.read()
+        if not ret: break
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) ##<< Generates a grayscale (thus only one 2d-array)
+        out_mp4.write(gray)
+    
+    ## Close video files
+    out_mp4.release()
     cap.release()
 
-    progress_bar.empty()  # Clear the progress bar
-
-st.title("Video Transformer")
-
-uploaded_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv"])
-
-if uploaded_file is not None:
-    with st.spinner('Processing video...'):
-        # Create a temporary directory to save the uploaded video
-        with tempfile.NamedTemporaryFile(delete=False) as temp_video_file:
-            temp_video_file.write(uploaded_file.read())
-            temp_video_file_path = temp_video_file.name
-
-        # Define the output video file path
-        output_video_path = os.path.join(tempfile.gettempdir(), 'transformed_video.mp4')
-
-        # Process the video with the transformation
-        process_video(temp_video_file_path, output_video_path)
-
+    ## Reencodes video to H264 using ffmpeg
+    ##  It calls ffmpeg back in a terminal so it fill fail without ffmpeg installed
+    ##  ... and will probably fail in streamlit cloud
+    convertedVideo = "./testh264.mp4"
+    subprocess.call(args=f"ffmpeg -y -i {temp_file_result} -c:v libx264 {convertedVideo}".split(" "))
+    
+    ## Show results
+    col1,col2 = st.columns(2)
+    col1.header("Original Video")
+    col1.video(temp_file_to_save)
+    col2.header("Output from OpenCV (MPEG-4)")
+    col2.video(temp_file_result)
+    col2.header("After conversion to H264")
+    col2.video(convertedVideo)
