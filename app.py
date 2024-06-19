@@ -71,17 +71,22 @@ def main():
             ret, frame = cap.read()
             if not ret:
                 break
-            input_tensor = preprocess(frame,count)
-            outputs = ort_session.run(None, {ort_session.get_inputs()[0].name: input_tensor})
             texty.write(count)
             count+=1
             if count%30==0:
+                
+                input_tensor = preprocess(frame,count)
+                outputs = ort_session.run(None, {ort_session.get_inputs()[0].name: input_tensor})
                 predictions = postprocess(outputs[0])
                 frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
                 frame=draw_boxes(frame, predictions)
                 frame=cv2.resize(frame,(320,320))
                 progress_bar.progress(count*100//1977)
-                stframe.image(frame, channels="RGB")
+                stframe.image(frame,
+                   caption='Detected Video',
+                   channels="RGB",
+                   use_column_width=True
+                   )
 
         cap.release()
 if __name__ == "__main__":
