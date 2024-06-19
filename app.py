@@ -100,8 +100,9 @@ def process_video(input_video_path, output_video_path):
     out = None
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_count = 0
-    
+    st.write(total_frames)
     # Create a progress bar
+    st_frame=st.empty()
     progress_bar = st.progress(0)
     
     while cap.isOpened():
@@ -110,23 +111,22 @@ def process_video(input_video_path, output_video_path):
             break
         
         # Example transformation: flipping the frame horizontally
-        transformed_frame = cv2.flip(frame, 1)
+        transformed_frame = cv2.flip(frame, 0)
         
         # If you are running an ML model, it would go here
         # transformed_frame = your_ml_model(frame)
-        
-        if out is None:
-            # Initialize the video writer
-            out = cv2.VideoWriter(output_video_path, fourcc, cap.get(cv2.CAP_PROP_FPS), (frame.shape[1], frame.shape[0]))
 
-        out.write(transformed_frame)
         frame_count += 1
         
         # Update the progress bar
         progress_bar.progress(frame_count / total_frames)
-
+        st_frame.image(transformed_frame,
+                   caption='Detected Video',
+                   channels="BGR",
+                   use_column_width=True
+                   )
     cap.release()
-    out.release()
+
     progress_bar.empty()  # Clear the progress bar
 
 st.title("Video Transformer")
@@ -145,18 +145,4 @@ if uploaded_file is not None:
 
         # Process the video with the transformation
         process_video(temp_video_file_path, output_video_path)
-
-        # Display the transformed video
-        st.video(output_video_path)
-
-        # Provide a download button
-        with open(output_video_path, "rb") as file:
-            st.download_button(
-                label="Download Transformed Video",
-                data=file,
-                file_name="transformed_video.mp4",
-                mime="video/mp4"
-            )
-
-st.write("Upload a video file to see the transformed result.")
 
