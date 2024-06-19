@@ -75,6 +75,7 @@ def main():
             outputs = ort_session.run(None, {ort_session.get_inputs()[0].name: input_tensor})
             texty.write(count)
             count+=1
+            if count%30==0
             predictions = postprocess(outputs[0])
             frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
             frame=draw_boxes(frame, predictions)
