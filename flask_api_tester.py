@@ -2,11 +2,14 @@ import requests
 import base64
 import cv2
 import numpy as np
+import os
+
 API_URL = "http://127.0.0.1:5000/get_dimensions"
 
 
 # Path to the image you want to send
-image_path = r"C:\Users\07032\github_projects\for_shadaab\cattle_image.jpg"
+main_dir=os.path.dirname(os.path.abspath(__file__)
+image_path = os.path.join(main_dir,"cattle_image.jpg")
 
 # Open the image in binary mode
 with open(image_path, 'rb') as image_file:
