@@ -87,6 +87,8 @@ def main():
                    channels="RGB",
                    use_column_width=True
                    )
+            cv2.waitKey(300)
+
 
         cap.release()
 if __name__ == "__main__":
